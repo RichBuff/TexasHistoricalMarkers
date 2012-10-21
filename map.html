@@ -25,6 +25,7 @@
             //key = AIzaSyDChATNeEQd-3gGliBQLdLkUQZH-Fjo_dc
             var map = null;
             var marker = null;
+            var busy = 0;
 
             var image = new google.maps.MarkerImage('images/thc_logo.png');
             var shadow = new google.maps.MarkerImage(
@@ -101,7 +102,9 @@
                 getHistoricalMarkers(pos.coords.latitude, pos.coords.longitude);
 
                 google.maps.event.addListener(map, 'center_changed', function() {
-                    setTimeout(handleCenterChanged, 2000);
+                    if (busy==0) {
+                        setTimeout(handleCenterChanged, 2000);
+                    }
                 });
             }
 
@@ -110,36 +113,13 @@
                 getHistoricalMarkers( centerLatLng.lat(), centerLatLng.lng() );
             }
 
-            function getLocationHandler(pos) {
-                $("#lat_field").val(pos.coords.latitude);
-                $("#long_field").val(pos.coords.longitude);
-
-                var coords = new google.maps.LatLng(pos.coords.latitude, pos.coords.longitude);
-                var mapOptions = {
-                    //zoom level, between 0 to 21.
-                    zoom: 12,
-                    //center to the user location
-                    center: coords,
-                    //add map type controls.
-                    mapTypeControl: true,
-                    navigationControlOptions: {style: google.maps.NavigationControlStyle.SMALL},
-                    mapTypeId: google.maps.MapTypeId.ROADMAP
-                };
-                // Create the map, and place it in the mapContainer div
-                map = new google.maps.Map(document.getElementById("mapcontainer"), mapOptions);
-                // Place the initial marker
-                var marker = new google.maps.Marker({
-                    position: coords,
-                    map: map,
-                    title: "Your current location"
-                });
-
-                getHistoricalMarkers(pos.coords.latitude, pos.coords.longitude);
-                setTimeout(startWatch, 15000);
-            }
 
             function getHistoricalMarkers(lat, lng){
-//                var url = "http://fineglasswork.com/histmarkers/index2.php"; // ?lat=30.3165907&lng=-97.6766992&miles=6&callback=jp";
+//              var url = "http://fineglasswork.com/histmarkers/index2.php"; // ?lat=30.3165907&lng=-97.6766992&miles=6&callback=jp";
+                if (busy==1)
+                    return;
+
+                busy=1;
                 $.ajax({
                     type: 'GET',
                     url: "http://fineglasswork.com/histmarkers/index2.php",
@@ -153,11 +133,14 @@
                                 addMarker(markers[i]);
                             }
                         }
+                        busy=0;
                     },
                     error: function(e) {
+                        busy=0;
                         alert("fail!");
                     },
                     complete: function(data) {
+                        busy=0;
                         console.log(e.message);
                     }
                 });
