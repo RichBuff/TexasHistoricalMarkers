@@ -24,10 +24,7 @@
         <script type="text/javascript">
             //key = AIzaSyDChATNeEQd-3gGliBQLdLkUQZH-Fjo_dc
             var map = null;
-<<<<<<< HEAD
-=======
             var marker = null;
->>>>>>> Fix Duplicate User Location Markers
 
             var image = new google.maps.MarkerImage('images/thc_logo.png');
             var shadow = new google.maps.MarkerImage(
@@ -68,16 +65,14 @@
             }
 
             function watchPositionHandler(pos) {
-
                 var coords = new google.maps.LatLng(pos.coords.latitude, pos.coords.longitude);
-<<<<<<< HEAD
-            debugger;
 
-            if (map == null) {
-=======
+                // if user has moved the map manually, then assume that they do not want to reposition and get local markers
+                if (map != null && (map.getCenter().Lat != pos.coords.latitude || map.getCenter().Lng != pos.coords.longitude) ) {
+                    return;
+                }
 
                 if (map == null) {
->>>>>>> Fix Duplicate User Location Markers
                     var mapOptions = {
                         //zoom level, between 0 to 21.
                         zoom: 12,
@@ -92,31 +87,27 @@
                     map = new google.maps.Map(document.getElementById("mapcontainer"), mapOptions);
                 }
 
-<<<<<<< HEAD
-                // Place the initial marker
-                var marker = new google.maps.Marker({
-                    position: coords,
-                    map: map,
-                    title: "Your current location"
-                });
-
-            /******************/
-                // Place the initial marker
-                var marker = new google.maps.Marker({
-=======
                 if (marker != null) {
                     marker.setMap(null);
                     marker = null;
                 }
 
                 marker = new google.maps.Marker({
->>>>>>> Fix Duplicate User Location Markers
                     position: coords,
                     map: map,
                     title: "Your current location"
                 });
 
                 getHistoricalMarkers(pos.coords.latitude, pos.coords.longitude);
+
+                google.maps.event.addListener(map, 'center_changed', function() {
+                    setTimeout(handleCenterChanged, 2000);
+                });
+            }
+
+            function handleCenterChanged(){
+                var centerLatLng = map.getCenter();
+                getHistoricalMarkers( centerLatLng.lat(), centerLatLng.lng() );
             }
 
             function getLocationHandler(pos) {
@@ -209,7 +200,7 @@
             function startWatch(){
                 navigator.geolocation.watchPosition(watchPositionHandler,watchErrorHandler,{
 //                    timeout: (90000),
-                    maximumAge: (1000 * 60 * 15),
+                    maximumAge: (1000 * 60 * 15),           // 15 min
                     enableHighAccuracy: true
                     });
             }
